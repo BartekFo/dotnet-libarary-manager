@@ -5,11 +5,12 @@
 @attribute [AllowAnonymous]
 @inject SignInManager<IdentityUser> SignInManager
 @inject NavigationManager NavigationManager
+@inherits RedirectIfAuthenticated
 
 <div class="login-container">
     <div class="login-card">
         <h2>Login</h2>
-        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="loginForm">
             <DataAnnotationsValidator />
             <ValidationSummary />
 
@@ -125,7 +126,8 @@
 </style>
 
 @code {
-    private LoginModel loginModel = new LoginModel();
+    [SupplyParameterFromForm]
+    private LoginModel loginModel { get; set; } = new LoginModel();
     private async Task HandleLogin()
     {
         var result = await SignInManager.PasswordSignInAsync(
@@ -133,7 +135,7 @@
 
         if (result.Succeeded)
         {
-            NavigationManager.NavigateTo("/");
+            NavigationManager.NavigateTo("/home");
         }
         else
         {

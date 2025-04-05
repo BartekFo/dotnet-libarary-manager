@@ -1,0 +1,73 @@
+@page "/Account/AccessDenied"
+@attribute [AllowAnonymous]
+
+<div class="access-denied-container">
+    <div class="access-denied-card">
+        <h2>Access Denied</h2>
+        <p>You do not have permission to access this resource.</p>
+        <a href="/" class="nav-link">Back to Home</a>
+    </div>
+</div>
+
+<style>
+    .access-denied-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 90vh;
+        background-image: url('/images/hero.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        position: relative;
+    }
+
+    .access-denied-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 1;
+    }
+
+    .access-denied-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+        z-index: 2;
+        text-align: center;
+    }
+
+    .access-denied-card h2 {
+        color: #dc3545;
+        margin-bottom: 1rem;
+    }
+
+    .access-denied-card p {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+    }
+
+    .nav-link {
+        display: inline-block;
+        color: #007bff;
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border: 1px solid #007bff;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+        color: white;
+        background-color: #007bff;
+        text-decoration: none;
+    }
+</style> 

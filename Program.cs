@@ -1,20 +1,30 @@
 using LibraryManager.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Load environment variables from .env file
+Env.Load();
+
+// Build connection string from environment variables
+var connectionString = $"Server={Environment.GetEnvironmentVariable("DB_SERVER")};" +
+                      $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
+                      $"User Id={Environment.GetEnvironmentVariable("DB_USER")};" +
+                      $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
+                      "TrustServerCertificate=True;";
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
-
 
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();

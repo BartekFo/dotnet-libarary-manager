@@ -1,0 +1,149 @@
+@page "/Account/Login"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@attribute [AllowAnonymous]
+@inject SignInManager<IdentityUser> SignInManager
+@inject NavigationManager NavigationManager
+
+<div class="login-container">
+    <div class="login-card">
+        <h2>Login</h2>
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <InputText id="email" @bind-Value="loginModel.Email" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <InputText id="password" type="password" @bind-Value="loginModel.Password" class="form-control" />
+            </div>
+            <button type="submit" class="login-button">Log in</button>
+        </EditForm>
+        <div class="navigation-links">
+            <a href="/Account/Register" class="nav-link">Don't have an account? Register</a>
+            <a href="/" class="nav-link">Back to Home</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 90vh;
+        background-image: url('/images/hero.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        position: relative;
+    }
+
+    .login-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 1;
+    }
+
+    .login-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .login-card h2 {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        color: #333;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #555;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .login-button {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .login-button:hover {
+        background-color: #0056b3;
+    }
+
+    .navigation-links {
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+    .nav-link {
+        display: block;
+        color: #007bff;
+        text-decoration: none;
+        margin: 0.5rem 0;
+        transition: color 0.2s;
+    }
+
+    .nav-link:hover {
+        color: #0056b3;
+        text-decoration: underline;
+    }
+</style>
+
+@code {
+    private LoginModel loginModel = new LoginModel();
+    private async Task HandleLogin()
+    {
+        var result = await SignInManager.PasswordSignInAsync(
+        loginModel.Email, loginModel.Password, false, lockoutOnFailure: false);
+
+        if (result.Succeeded)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            // Handle login failure
+        }
+    }
+
+    public class LoginModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}

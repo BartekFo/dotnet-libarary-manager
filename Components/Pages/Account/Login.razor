@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Web
+@using LibraryManager.Models.ViewModels
 @attribute [AllowAnonymous]
 @inject SignInManager<IdentityUser> SignInManager
 @inject NavigationManager NavigationManager
@@ -10,7 +11,7 @@
 <div class="login-container">
     <div class="login-card">
         <h2>Login</h2>
-        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="loginForm">
+        <EditForm Model="@loginModel" OnValidSubmit="Authenticate" FormName="loginForm">
             <DataAnnotationsValidator />
             <ValidationSummary />
 
@@ -127,25 +128,14 @@
 
 @code {
     [SupplyParameterFromForm]
-    private LoginModel loginModel { get; set; } = new LoginModel();
-    private async Task HandleLogin()
+    private LoginViewModel loginModel { get; set; } = new();
+    private async Task Authenticate()
     {
         var result = await SignInManager.PasswordSignInAsync(
         loginModel.Email, loginModel.Password, false, lockoutOnFailure: false);
 
-        if (result.Succeeded)
-        {
-            NavigationManager.NavigateTo("/home");
-        }
-        else
-        {
-            // Handle login failure
-        }
-    }
 
-    public class LoginModel
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
+        if (result.Succeeded)
+            NavigationManager.NavigateTo("/home");
     }
 }

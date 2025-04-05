@@ -60,6 +60,7 @@ builder.Services.AddServerSideBlazor();
 
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState();
 
 var app = builder.Build();
 

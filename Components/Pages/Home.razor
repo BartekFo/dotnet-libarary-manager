@@ -6,6 +6,7 @@
 @using System.Web
 @attribute [Authorize]
 @inject BookService BookService
+@inject BookCacheService BookCacheService
 @inject NavigationManager NavigationManager
 
 <PageTitle>Home</PageTitle>
@@ -164,8 +165,16 @@
         var popularGenres = new[] { "fiction", "mystery", "science fiction", "romance", "fantasy" };
         foreach (var genre in popularGenres)
         {
-            var books = await BookService.GetBooksBySubjectAsync(genre);
-            BookRecommendations[genre] = books;
+            if (BookCacheService.TryGetBooks(genre, out var cachedBooks))
+            {
+                BookRecommendations[genre] = cachedBooks;
+            }
+            else
+            {
+                var books = await BookService.GetBooksBySubjectAsync(genre);
+                BookRecommendations[genre] = books;
+                BookCacheService.CacheBooks(genre, books);
+            }
         }
 
         IsLoading = false;

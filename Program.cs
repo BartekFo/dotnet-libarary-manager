@@ -65,6 +65,8 @@ builder.Services.AddCascadingAuthenticationState();
 
 // Register BookService
 builder.Services.AddHttpClient<BookService>();
+builder.Services.AddScoped<BookService>();
+builder.Services.AddSingleton<BookCacheService>();
 
 var app = builder.Build();
 

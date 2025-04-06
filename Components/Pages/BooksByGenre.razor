@@ -5,6 +5,7 @@
 @using System.Web
 @attribute [Authorize]
 @inject BookService BookService
+@inject BookCacheService BookCacheService
 @inject NavigationManager NavigationManager
 
 <PageTitle>@CapitalizeFirstLetter(Genre) Books</PageTitle>
@@ -17,49 +18,58 @@
 
     @if (IsLoading)
     {
-                <div class="text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (Books.Count == 0)
+    {
+        <div class="alert alert-info">
+            No books found for this genre.
+        </div>
     }
     else
     {
-                <div class="row">
-                    @foreach (var book in Books)
-                    {
-                                <div class="col-md-4 mb-4">
-                                    <div class="card h-100">
-                                        @if (!string.IsNullOrEmpty(book.CoverUrl))
-                                        {
-                                                    <img src="@book.CoverUrl" class="card-img-top" alt="@book.Title">
-                                        }
-                                        <div class="card-body">
-                                            <h5 class="card-title">@book.Title</h5>
-                                            <h6 class="card-subtitle mb-2 text-muted">@book.Author</h6>
-                                            <p class="card-text">@book.Description</p>
-                                        </div>
-                                    </div>
-                                </div>
-                    }
-                </div>
-
-                <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
-                            <a class="page-link" href="#" @onclick="() => ChangePage(CurrentPage - 1)">Previous</a>
-                        </li>
-                        @for (int i = 1; i <= TotalPages; i++)
+        <div class="row">
+            @foreach (var book in Books)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        @if (!string.IsNullOrEmpty(book.CoverUrl))
                         {
-                                    <li class="page-item @(i == CurrentPage ? "active" : "")">
-                                        <a class="page-link" href="#" @onclick="() => ChangePage(i)">@i</a>
-                                    </li>
+                            <img src="@book.CoverUrl" class="card-img-top" alt="@book.Title">
                         }
-                        <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
-                            <a class="page-link" href="#" @onclick="() => ChangePage(CurrentPage + 1)">Next</a>
+                        <div class="card-body">
+                            <h5 class="card-title">@book.Title</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">@book.Author</h6>
+                            <p class="card-text">@book.Description</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (TotalPages > 1)
+        {
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="#" @onclick="() => ChangePage(CurrentPage - 1)">Previous</a>
+                    </li>
+                    @for (int i = 1; i <= TotalPages; i++)
+                    {
+                        <li class="page-item @(i == CurrentPage ? "active" : "")">
+                            <a class="page-link" href="#" @onclick="() => ChangePage(i)">@i</a>
                         </li>
-                    </ul>
-                </nav>
+                    }
+                    <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="#" @onclick="() => ChangePage(CurrentPage + 1)">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        }
     }
 </div>
 
@@ -112,13 +122,15 @@
 
 @code {
     [Parameter]
+    [EditorRequired]
     public string Genre { get; set; } = string.Empty;
 
     private List<Book> Books { get; set; } = new();
     private bool IsLoading { get; set; } = true;
     private int CurrentPage { get; set; } = 1;
-    private int PageSize { get; set; } = 9;
+    private const int PageSize = 9;
     private int TotalPages { get; set; }
+    private List<Book> AllBooks { get; set; } = new();
 
     private string CapitalizeFirstLetter(string text)
     {
@@ -141,18 +153,30 @@
     {
         IsLoading = true;
         var decodedGenre = HttpUtility.UrlDecode(Genre);
-        var allBooks = await BookService.GetBooksBySubjectAsync(decodedGenre);
-        TotalPages = (int)Math.Ceiling(allBooks.Count / (double)PageSize);
-        Books = allBooks.Skip((CurrentPage - 1) * PageSize).Take(PageSize).ToList();
+
+        if (BookCacheService.TryGetBooks(decodedGenre, out var cachedBooks))
+        {
+            AllBooks = cachedBooks;
+        }
+        else
+        {
+            AllBooks = await BookService.GetBooksBySubjectAsync(decodedGenre);
+            BookCacheService.CacheBooks(decodedGenre, AllBooks);
+        }
+
+        TotalPages = (int)Math.Ceiling(AllBooks.Count / (double)PageSize);
+        Books = AllBooks.Skip((CurrentPage - 1) * PageSize).Take(PageSize).ToList();
         IsLoading = false;
     }
 
-    private async Task ChangePage(int page)
+    private void ChangePage(int page)
     {
         if (page >= 1 && page <= TotalPages)
         {
             CurrentPage = page;
-            await LoadBooks();
+            IsLoading = true;
+            Books = AllBooks.Skip((CurrentPage - 1) * PageSize).Take(PageSize).ToList();
+            IsLoading = false;
         }
     }
 }

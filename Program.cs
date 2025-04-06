@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using LibraryManager.Data;
+using LibraryManager.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +62,9 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
+
+// Register BookService
+builder.Services.AddHttpClient<BookService>();
 
 var app = builder.Build();
 

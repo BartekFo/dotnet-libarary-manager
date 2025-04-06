@@ -14,11 +14,19 @@ namespace LibraryManager.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<Book>> GetBooksBySubjectAsync(string subject, int? limit = null)
+        public async Task<List<Book>> GetBooksBySubjectAsync(string subject, int? limit = null, int? offset = null)
         {
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<OpenLibraryResponse>($"{_baseUrl}/subjects/{subject}.json?limit={limit ?? null}");
+                var url = $"{_baseUrl}/subjects/{subject}.json";
+                if (limit.HasValue || offset.HasValue)
+                {
+                    url += "?";
+                    if (limit.HasValue) url += $"limit={limit}";
+                    if (offset.HasValue) url += $"&offset={offset}";
+                }
+
+                var response = await _httpClient.GetFromJsonAsync<OpenLibraryResponse>(url);
                 if (response?.Works == null)
                     return new List<Book>();
 

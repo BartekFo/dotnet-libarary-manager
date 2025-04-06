@@ -39,7 +39,7 @@
                     </div>
                 </div>
                 <div class="row">
-                    @foreach (var book in BookRecommendations[genre].Take(6))
+                    @foreach (var book in BookRecommendations[genre])
                     {
                         <div class="col-md-4 mb-4">
                             <div class="card h-100">
@@ -167,11 +167,11 @@
         {
             if (BookCacheService.TryGetBooks(genre, out var cachedBooks))
             {
-                BookRecommendations[genre] = cachedBooks;
+                BookRecommendations[genre] = cachedBooks.Take(6).ToList();
             }
             else
             {
-                var books = await BookService.GetBooksBySubjectAsync(genre);
+                var books = await BookService.GetBooksBySubjectAsync(genre, limit: 6);
                 BookRecommendations[genre] = books;
                 BookCacheService.CacheBooks(genre, books);
             }

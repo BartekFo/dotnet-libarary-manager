@@ -164,24 +164,26 @@
         IsLoading = true;
         var decodedGenre = HttpUtility.UrlDecode(Genre);
 
+        // Get cached books
         if (BookCacheService.TryGetBooks(decodedGenre, out var cachedBooks))
         {
             AllBooks = cachedBooks;
         }
         else
         {
-            // Fetch enough books for 5 pages
-            var books = await BookService.GetBooksBySubjectAsync(decodedGenre);
+            // Fetch first page of books
+            var books = await BookService.GetBooksBySubjectAsync(decodedGenre, limit: PageSize);
             AllBooks = books;
             BookCacheService.CacheBooks(decodedGenre, AllBooks);
         }
 
-        // Ensure we have enough books for 5 pages
-        if (AllBooks.Count < PageSize * DesiredPages)
+        // If we need more books for the current page, fetch them
+        var neededBooks = (CurrentPage * PageSize);
+        if (AllBooks.Count < neededBooks)
         {
-            // If we don't have enough books, fetch more
-            var additionalBooks = await BookService.GetBooksBySubjectAsync(decodedGenre, PageSize * DesiredPages);
-            AllBooks = additionalBooks;
+            var offset = AllBooks.Count;
+            var additionalBooks = await BookService.GetBooksBySubjectAsync(decodedGenre, limit: PageSize, offset: offset);
+            AllBooks.AddRange(additionalBooks);
             BookCacheService.CacheBooks(decodedGenre, AllBooks);
         }
 

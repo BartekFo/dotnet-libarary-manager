@@ -48,45 +48,101 @@
                 <h1 class="mb-3">@Book.Title</h1>
                 <h4 class="text-muted mb-4">by @Book.Author.Name</h4>
 
+                <div class="author-details mb-4">
+                    <h5>Author Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Born:</strong> @Book.Author.Birth_date</p>
+                            <p><strong>Death:</strong> @Book.Author.Death_date</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Alternative Names:</strong> @string.Join(", ", Book.Author.Alternate_names ?? new
+                                                            List<string>())</p>
+                    </div>
+                </div>
+            </div>
 
                 <div class="book-details mb-4">
                     <h5>Reading Counts</h5>
-                    <p><strong>Want to read:</strong> @Book.ReadingCounts.Counts.Want_to_read</p>
-                    <p><strong>Currently reading</strong> @Book.ReadingCounts.Counts.Currently_reading</p>
-                    <p><strong>Already read</strong> @Book.ReadingCounts.Counts.Already_read</p>
-                </div>
-
-                <div class="book-details mb-4">
-                    <h5>Ratings</h5>
-                    <p><strong>Average:</strong> @Book.Ratings.Summary.Average ⭐</p>
-                    <p><strong>Count:</strong> @Book.Ratings.Summary.Count</p>
-                    <div class="rating-bars">
-                        <div class="rating-bar">
-                            <span>⭐⭐⭐⭐⭐</span>
-                            <span>@Book.Ratings.Counts.Five</span>
+                    <div class="reading-counts-grid">
+                        <div class="count-item">
+                            <span class="count-icon">📚</span>
+                            <span class="count-label">Want to read</span>
+                            <span class="count-value">@Book.ReadingCounts.Counts.Want_to_read</span>
                         </div>
-                        <div class="rating-bar">
-                            <span>⭐⭐⭐⭐</span>
-                            <span>@Book.Ratings.Counts.Four</span>
+                        <div class="count-item">
+                            <span class="count-icon">📖</span>
+                            <span class="count-label">Currently reading</span>
+                            <span class="count-value">@Book.ReadingCounts.Counts.Currently_reading</span>
                         </div>
-                        <div class="rating-bar">
-                            <span>⭐⭐⭐</span>
-                            <span>@Book.Ratings.Counts.Three</span>
-                        </div>
-                        <div class="rating-bar">
-                            <span>⭐⭐</span>
-                            <span>@Book.Ratings.Counts.Two</span>
-                        </div>
-                        <div class="rating-bar">
-                            <span>⭐</span>
-                            <span>@Book.Ratings.Counts.One</span>
+                        <div class="count-item">
+                            <span class="count-icon">✅</span>
+                            <span class="count-label">Already read</span>
+                            <span class="count-value">@Book.ReadingCounts.Counts.Already_read</span>
                         </div>
                     </div>
                 </div>
 
+                <div class="book-details mb-4">
+                    <h5>Ratings</h5>
+                    <div class="ratings-summary">
+                        <div class="average-rating">
+                            <span class="rating-value">@Book.Ratings.Summary.Average</span>
+                            <span class="rating-stars">@(new string('⭐',
+                                                        (int)Math.Round(Book.Ratings.Summary.Average)))</span>
+                        <span class="rating-count">(@Book.Ratings.Summary.Count ratings)</span>
+                    </div>
+                    <div class="rating-bars">
+                        <div class="rating-bar">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                            <div class="bar-container">
+                                <div class="bar-fill"
+                                    style="width: @(Book.Ratings.Counts.Five * 100 / Book.Ratings.Summary.Count)%">
+                                </div>
+                            </div>
+                            <span class="count">@Book.Ratings.Counts.Five</span>
+                        </div>
+                        <div class="rating-bar">
+                            <span class="stars">⭐⭐⭐⭐</span>
+                            <div class="bar-container">
+                                <div class="bar-fill"
+                                    style="width: @(Book.Ratings.Counts.Four * 100 / Book.Ratings.Summary.Count)%">
+                                </div>
+                            </div>
+                            <span class="count">@Book.Ratings.Counts.Four</span>
+                        </div>
+                        <div class="rating-bar">
+                            <span class="stars">⭐⭐⭐</span>
+                            <div class="bar-container">
+                                <div class="bar-fill"
+                                    style="width: @(Book.Ratings.Counts.Three * 100 / Book.Ratings.Summary.Count)%">
+                                </div>
+                            </div>
+                            <span class="count">@Book.Ratings.Counts.Three</span>
+                        </div>
+                        <div class="rating-bar">
+                            <span class="stars">⭐⭐</span>
+                            <div class="bar-container">
+                                <div class="bar-fill"
+                                    style="width: @(Book.Ratings.Counts.Two * 100 / Book.Ratings.Summary.Count)%"></div>
+                            </div>
+                            <span class="count">@Book.Ratings.Counts.Two</span>
+                        </div>
+                        <div class="rating-bar">
+                            <span class="stars">⭐</span>
+                            <div class="bar-container">
+                                <div class="bar-fill"
+                                    style="width: @(Book.Ratings.Counts.One * 100 / Book.Ratings.Summary.Count)%"></div>
+                            </div>
+                            <span class="count">@Book.Ratings.Counts.One</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             </div>
         </div>
-    }
+        }
 </div>
 
 <style>
@@ -110,26 +166,129 @@
         padding: 0.5rem 1rem;
     }
 
+    .reading-counts-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .count-item {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+
+    .count-item:hover {
+        transform: translateY(-2px);
+    }
+
+    .count-icon {
+        font-size: 1.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .count-label {
+        display: block;
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .count-value {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #495057;
+    }
+
+    .ratings-summary {
+        margin-top: 1rem;
+    }
+
+    .average-rating {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .rating-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #495057;
+    }
+
+    .rating-stars {
+        font-size: 1.5rem;
+        margin: 0 0.5rem;
+    }
+
+    .rating-count {
+        color: #6c757d;
+    }
+
     .rating-bars {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
-        width: 200px;
+        gap: 0.75rem;
+        margin: 0 auto;
     }
 
     .rating-bar {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        gap: 0.5rem;
+        min-width: 0;
     }
 
-    .rating-bar span:first-child {
-        width: 120px;
+    .rating-bar .stars {
+        width: 150px;
+        color: #ffc107;
+        flex-shrink: 0;
     }
 
-    .rating-bar span:last-child {
-        width: 40px;
+    .bar-container {
+        flex: 1;
+        min-width: 0;
+        height: 8px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .bar-fill {
+        height: 100%;
+        background-color: #ffc107;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    .rating-bar .count {
+        width: 50px;
         text-align: right;
+        color: #6c757d;
+        flex-shrink: 0;
+    }
+
+    .author-details {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .author-details h5 {
+        color: #495057;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 0.5rem;
+    }
+
+    .author-details p {
+        margin-bottom: 0.75rem;
     }
 </style>
 

@@ -68,6 +68,9 @@ builder.Services.AddHttpClient<BookService>();
 builder.Services.AddScoped<BookService>();
 builder.Services.AddSingleton<BookCacheService>();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<UserBookService>();
+
 var app = builder.Build();
 
 // Seed the database

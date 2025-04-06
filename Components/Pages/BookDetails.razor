@@ -1,17 +1,22 @@
 @page "/books/{BookKey}"
 @using Microsoft.AspNetCore.Authorization
 @using LibraryManager.Models.Entities
+@using LibraryManager.Models
 @using LibraryManager.Services
 @using System.Web
 @attribute [Authorize]
 @inject BookService BookService
+@inject UserBookService UserBookService
 @inject NavigationManager NavigationManager
+@inject ILogger<BookDetails> Logger
+@rendermode InteractiveServer
 
 <PageTitle>@(Book?.Title ?? "Book Details")</PageTitle>
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <a href="javascript:history.back()" class="btn btn-outline-primary">Back</a>
+        <button class="btn btn-primary" @onclick="() => ShowAddToLibraryModal = true">Add to Library</button>
     </div>
 
     @if (IsLoading)
@@ -143,6 +148,49 @@
             </div>
         </div>
         }
+
+    @if (ShowAddToLibraryModal)
+    {
+        <div class="modal-backdrop fade show"></div>
+        <div class="modal show d-block" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add to Library</h5>
+                        <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <EditForm Model="@AddBookModel" OnValidSubmit="HandleAddToLibrary">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            @if (!string.IsNullOrEmpty(ErrorMessage))
+                            {
+                                <div class="alert alert-danger">@ErrorMessage</div>
+                            }
+
+                            <div class="mb-3">
+                                <label class="form-label">Reading Status</label>
+                                <InputSelect @bind-Value="AddBookModel.Status" class="form-select">
+                                    <option value="@ReadingStatus.WantToRead">Want to Read</option>
+                                    <option value="@ReadingStatus.CurrentlyReading">Currently Reading</option>
+                                    <option value="@ReadingStatus.Completed">Completed</option>
+                                </InputSelect>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Start Date</label>
+                                <InputDate @bind-Value="AddBookModel.StartDate" class="form-control" />
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+                                <button type="submit" class="btn btn-primary">Add Book</button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 <style>
@@ -290,6 +338,20 @@
     .author-details p {
         margin-bottom: 0.75rem;
     }
+
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+    }
+
+    .modal {
+        z-index: 1050;
+    }
 </style>
 
 @code {
@@ -299,6 +361,9 @@
 
     private Book? Book { get; set; }
     private bool IsLoading { get; set; } = true;
+    private bool ShowAddToLibraryModal { get; set; }
+    private string? ErrorMessage { get; set; }
+    private AddBookModel AddBookModel { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -312,8 +377,43 @@
 
     private async Task LoadBookDetails()
     {
-        IsLoading = true;
-        Book = await BookService.GetBookDetailsAsync(BookKey);
-        IsLoading = false;
+        try
+        {
+            IsLoading = true;
+            Book = await BookService.GetBookDetailsAsync(BookKey);
+            IsLoading = false;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading book details for BookKey: {BookKey}", BookKey);
+            ErrorMessage = "Error loading book details. Please try again.";
+            IsLoading = false;
+        }
+    }
+
+    private void CloseModal()
+    {
+        ShowAddToLibraryModal = false;
+        ErrorMessage = null;
+        StateHasChanged();
+    }
+
+    private async Task HandleAddToLibrary()
+    {
+        try
+        {
+            if (Book != null)
+            {
+                await UserBookService.AddUserBookAsync(BookKey, AddBookModel.Status, AddBookModel.StartDate);
+                CloseModal();
+                NavigationManager.NavigateTo("/bookshelf");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error adding book to library. BookKey: {BookKey}, Status: {Status}", BookKey, AddBookModel.Status);
+            ErrorMessage = "Error adding book to library. Please try again.";
+            StateHasChanged();
+        }
     }
 }

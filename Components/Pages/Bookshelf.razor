@@ -1,0 +1,90 @@
+@page "/bookshelf"
+@using LibraryManager.Models.Entities
+@using LibraryManager.Services
+@attribute [Authorize]
+@inject UserBookService UserBookService
+@rendermode InteractiveServer
+
+<PageTitle>My Bookshelf</PageTitle>
+
+<div class="container mt-4">
+    <h1 class="mb-4">My Bookshelf</h1>
+
+    @if (IsLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-4">
+                <h3>Want to Read</h3>
+                <div class="list-group">
+                    @foreach (var book in UserBooks.Where(b => b.Status == ReadingStatus.WantToRead))
+                    {
+                        <a href="/books/@book.BookKey" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">@book.Book?.Title</h5>
+                                <small>Added: @book.StartDate.ToShortDateString()</small>
+                            </div>
+                            <p class="mb-1">by @book.Book?.Author?.Name</p>
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <h3>Currently Reading</h3>
+                <div class="list-group">
+                    @foreach (var book in UserBooks.Where(b => b.Status == ReadingStatus.CurrentlyReading))
+                    {
+                        <a href="/books/@book.BookKey" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">@book.Book?.Title</h5>
+                                <small>Started: @book.StartDate.ToShortDateString()</small>
+                            </div>
+                            <p class="mb-1">by @book.Book?.Author?.Name</p>
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <h3>Completed</h3>
+                <div class="list-group">
+                    @foreach (var book in UserBooks.Where(b => b.Status == ReadingStatus.Completed))
+                    {
+                        <a href="/books/@book.BookKey" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">@book.Book?.Title</h5>
+                                <small>Completed: @book.EndDate?.ToShortDateString()</small>
+                            </div>
+                            <p class="mb-1">by @book.Book?.Author?.Name</p>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<UserBook> UserBooks { get; set; } = new();
+    private bool IsLoading { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserBooks();
+    }
+
+    private async Task LoadUserBooks()
+    {
+        IsLoading = true;
+        UserBooks = await UserBookService.GetUserBooksAsync();
+        IsLoading = false;
+    }
+}

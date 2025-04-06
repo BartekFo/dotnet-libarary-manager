@@ -14,11 +14,11 @@ namespace LibraryManager.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<Book>> GetBooksBySubjectAsync(string subject, int limit = 6)
+        public async Task<List<Book>> GetBooksBySubjectAsync(string subject, int? limit = null)
         {
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<OpenLibraryResponse>($"{_baseUrl}/subjects/{subject}.json?limit={limit}");
+                var response = await _httpClient.GetFromJsonAsync<OpenLibraryResponse>($"{_baseUrl}/subjects/{subject}.json?limit={limit ?? null}");
                 if (response?.Works == null)
                     return new List<Book>();
 
@@ -37,8 +37,10 @@ namespace LibraryManager.Services
 
                 return books;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                // Log the error
+                Console.WriteLine($"Error fetching books for subject {subject}: {ex.Message}");
                 return new List<Book>();
             }
         }

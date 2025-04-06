@@ -56,16 +56,17 @@
             <nav aria-label="Page navigation" class="mt-4">
                 <ul class="pagination justify-content-center">
                     <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
-                        <a class="page-link" href="#" @onclick="() => ChangePage(CurrentPage - 1)">Previous</a>
+                        <a class="page-link"
+                            href="/books/genre/@HttpUtility.UrlEncode(Genre)?page=@(CurrentPage - 1)">Previous</a>
                     </li>
                     @for (int i = 1; i <= TotalPages; i++)
                     {
                         <li class="page-item @(i == CurrentPage ? "active" : "")">
-                            <a class="page-link" href="#" @onclick="() => ChangePage(i)">@i</a>
+                            <a class="page-link" href="/books/genre/@HttpUtility.UrlEncode(Genre)?page=@i">@i</a>
                         </li>
                     }
                     <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
-                        <a class="page-link" href="#" @onclick="() => ChangePage(CurrentPage + 1)">Next</a>
+                        <a class="page-link" href="/books/genre/@HttpUtility.UrlEncode(Genre)?page=@(CurrentPage + 1)">Next</a>
                     </li>
                 </ul>
             </nav>
@@ -125,10 +126,14 @@
     [EditorRequired]
     public string Genre { get; set; } = string.Empty;
 
+    [SupplyParameterFromQuery]
+    public int? Page { get; set; }
+
     private List<Book> Books { get; set; } = new();
     private bool IsLoading { get; set; } = true;
     private int CurrentPage { get; set; } = 1;
-    private const int PageSize = 9;
+    private const int PageSize = 10;
+    private const int DesiredPages = 5;
     private int TotalPages { get; set; }
     private List<Book> AllBooks { get; set; } = new();
 
@@ -141,12 +146,17 @@
 
     protected override async Task OnInitializedAsync()
     {
+        CurrentPage = Page ?? 1;
         await LoadBooks();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        await LoadBooks();
+        if (CurrentPage != (Page ?? 1))
+        {
+            CurrentPage = Page ?? 1;
+            await LoadBooks();
+        }
     }
 
     private async Task LoadBooks()
@@ -160,23 +170,23 @@
         }
         else
         {
-            AllBooks = await BookService.GetBooksBySubjectAsync(decodedGenre);
+            // Fetch enough books for 5 pages
+            var books = await BookService.GetBooksBySubjectAsync(decodedGenre);
+            AllBooks = books;
             BookCacheService.CacheBooks(decodedGenre, AllBooks);
         }
 
-        TotalPages = (int)Math.Ceiling(AllBooks.Count / (double)PageSize);
+        // Ensure we have enough books for 5 pages
+        if (AllBooks.Count < PageSize * DesiredPages)
+        {
+            // If we don't have enough books, fetch more
+            var additionalBooks = await BookService.GetBooksBySubjectAsync(decodedGenre, PageSize * DesiredPages);
+            AllBooks = additionalBooks;
+            BookCacheService.CacheBooks(decodedGenre, AllBooks);
+        }
+
+        TotalPages = Math.Min(DesiredPages, (int)Math.Ceiling(AllBooks.Count / (double)PageSize));
         Books = AllBooks.Skip((CurrentPage - 1) * PageSize).Take(PageSize).ToList();
         IsLoading = false;
-    }
-
-    private void ChangePage(int page)
-    {
-        if (page >= 1 && page <= TotalPages)
-        {
-            CurrentPage = page;
-            IsLoading = true;
-            Books = AllBooks.Skip((CurrentPage - 1) * PageSize).Take(PageSize).ToList();
-            IsLoading = false;
-        }
     }
 }

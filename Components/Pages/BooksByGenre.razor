@@ -133,9 +133,7 @@
     private bool IsLoading { get; set; } = true;
     private int CurrentPage { get; set; } = 1;
     private const int PageSize = 10;
-    private const int DesiredPages = 5;
-    private int TotalPages { get; set; }
-    private List<Book> AllBooks { get; set; } = new();
+    private const int TotalPages = 5; // Fixed number of pages
 
     private string CapitalizeFirstLetter(string text)
     {
@@ -164,34 +162,11 @@
         IsLoading = true;
         var decodedGenre = HttpUtility.UrlDecode(Genre);
 
-        // Get cached books
-        if (BookCacheService.TryGetBooks(decodedGenre, out var cachedBooks))
-        {
-            AllBooks = cachedBooks ?? new List<Book>();
-        }
-        else
-        {
-            // Fetch first page of books
-            var books = await BookService.GetBooksBySubjectAsync(decodedGenre, limit: PageSize);
-            AllBooks = books ?? new List<Book>();
-            BookCacheService.CacheBooks(decodedGenre, AllBooks);
-        }
+        // Always fetch books for the current page
+        var offset = (CurrentPage - 1) * PageSize;
+        var books = await BookService.GetBooksBySubjectAsync(decodedGenre, limit: PageSize, offset: offset);
+        Books = books ?? new List<Book>();
 
-        // If we need more books for the current page, fetch them
-        var neededBooks = (CurrentPage * PageSize);
-        if (AllBooks.Count < neededBooks)
-        {
-            var offset = AllBooks.Count;
-            var additionalBooks = await BookService.GetBooksBySubjectAsync(decodedGenre, limit: PageSize, offset: offset);
-            if (additionalBooks != null)
-            {
-                AllBooks.AddRange(additionalBooks);
-                BookCacheService.CacheBooks(decodedGenre, AllBooks);
-            }
-        }
-
-        TotalPages = Math.Min(DesiredPages, (int)Math.Ceiling(AllBooks.Count / (double)PageSize));
-        Books = AllBooks.Skip((CurrentPage - 1) * PageSize).Take(PageSize).ToList();
         IsLoading = false;
     }
 }

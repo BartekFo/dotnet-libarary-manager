@@ -1,0 +1,143 @@
+@page "/books/{BookKey}"
+@using Microsoft.AspNetCore.Authorization
+@using LibraryManager.Models.Entities
+@using LibraryManager.Services
+@using System.Web
+@attribute [Authorize]
+@inject BookService BookService
+@inject NavigationManager NavigationManager
+
+<PageTitle>@(Book?.Title ?? "Book Details")</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="javascript:history.back()" class="btn btn-outline-primary">Back</a>
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (Book == null)
+    {
+        <div class="alert alert-danger">
+            Book not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-4">
+                @if (!string.IsNullOrEmpty(Book.CoverUrl))
+                {
+                    <img src="@Book.CoverUrl" class="img-fluid rounded shadow" alt="@Book.Title">
+                }
+                else
+                {
+                    <div class="no-cover-placeholder">
+                        <i class="fas fa-book fa-5x"></i>
+                        <p>No cover available</p>
+                    </div>
+                }
+            </div>
+            <div class="col-md-8">
+                <h1 class="mb-3">@Book.Title</h1>
+                <h4 class="text-muted mb-4">by @Book.Author</h4>
+
+                <div class="book-details mb-4">
+                    @if (Book.FirstPublishYear.HasValue)
+                    {
+                        <p><strong>First Published:</strong> @Book.FirstPublishYear</p>
+                    }
+                    <p><strong>Editions:</strong> @Book.EditionCount</p>
+                    <p><strong>Full Text Available:</strong> @(Book.HasFulltext ? "Yes" : "No")</p>
+                    <p><strong>Public Scan:</strong> @(Book.PublicScan ? "Yes" : "No")</p>
+                </div>
+
+                @if (Book.InternetArchiveIds.Any())
+                {
+                    <div class="mb-4">
+                        <h5>Available in Internet Archive</h5>
+                        <div class="list-group">
+                            @foreach (var iaId in Book.InternetArchiveIds)
+                            {
+                                <a href="https://archive.org/details/@iaId" target="_blank"
+                                    class="list-group-item list-group-item-action">
+                                    @iaId
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (Book.Subjects.Any())
+                {
+                    <div class="mb-4">
+                        <h5>Subjects</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var subject in Book.Subjects)
+                            {
+                                <a href="/books/genre/@HttpUtility.UrlEncode(subject)"
+                                    class="badge bg-primary text-decoration-none">
+                                    @subject
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .no-cover-placeholder {
+        height: 400px;
+        background-color: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        color: #6c757d;
+    }
+
+    .book-details p {
+        margin-bottom: 0.5rem;
+    }
+
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+</style>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public string BookKey { get; set; } = string.Empty;
+
+    private Book? Book { get; set; }
+    private bool IsLoading { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBookDetails();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadBookDetails();
+    }
+
+    private async Task LoadBookDetails()
+    {
+        IsLoading = true;
+        Book = await BookService.GetBookDetailsAsync(BookKey);
+        IsLoading = false;
+    }
+}

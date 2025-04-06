@@ -37,15 +37,17 @@
             {
                 <div class="col-md-4 mb-4">
                     <div class="card h-100">
-                        @if (!string.IsNullOrEmpty(book.CoverUrl))
-                        {
-                            <img src="@book.CoverUrl" class="card-img-top" alt="@book.Title">
-                        }
-                        <div class="card-body">
-                            <h5 class="card-title">@book.Title</h5>
-                            <h6 class="card-subtitle mb-2 text-muted">@book.Author</h6>
-                            <p class="card-text">@book.Description</p>
-                        </div>
+                        <a href="/books/@book.Key" class="text-decoration-none text-dark">
+                            @if (!string.IsNullOrEmpty(book.CoverUrl))
+                            {
+                                <img src="@book.CoverUrl" class="card-img-top" alt="@book.Title">
+                            }
+                            <div class="card-body">
+                                <h5 class="card-title">@book.Title</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">@book.Author</h6>
+                                <p class="card-text">@book.Description</p>
+                            </div>
+                        </a>
                     </div>
                 </div>
             }

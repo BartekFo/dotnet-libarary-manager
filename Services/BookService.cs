@@ -14,7 +14,7 @@ namespace LibraryManager.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<Book>> GetBooksBySubjectAsync(string subject, int limit = 5)
+        public async Task<List<Book>> GetBooksBySubjectAsync(string subject, int limit = 6)
         {
             try
             {

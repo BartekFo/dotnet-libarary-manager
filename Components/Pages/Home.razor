@@ -3,8 +3,10 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using LibraryManager.Models.Entities
 @using LibraryManager.Services
+@using System.Web
 @attribute [Authorize]
 @inject BookService BookService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Home</PageTitle>
 
@@ -13,6 +15,8 @@
         <h1>Welcome, @UserEmail!</h1>
         <p class="lead">Discover your next favorite book from our recommendations.</p>
     </div>
+
+    <h1 class="mb-4">Book Recommendations</h1>
 
     @if (IsLoading)
     {
@@ -27,7 +31,12 @@
         @foreach (var genre in BookRecommendations.Keys)
         {
             <div class="genre-section mb-5">
-                <h2 class="genre-title">@CapitalizeFirstLetter(genre)</h2>
+                <div class="genre-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="genre-title">@CapitalizeFirstLetter(genre)</h2>
+                        <a href="/books/genre/@HttpUtility.UrlEncode(genre)" class="btn btn-outline-primary">See More</a>
+                    </div>
+                </div>
                 <div class="row">
                     @foreach (var book in BookRecommendations[genre])
                     {
@@ -80,12 +89,16 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    .genre-title {
-        font-weight: bold;
-        color: #2c3e50;
+    .genre-header {
         margin-bottom: 1.5rem;
         padding-bottom: 0.5rem;
         border-bottom: 2px solid #f0f0f0;
+    }
+
+    .genre-title {
+        font-weight: bold;
+        color: #2c3e50;
+        margin: 0;
     }
 
     .card {

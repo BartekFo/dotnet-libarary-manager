@@ -167,13 +167,13 @@
         {
             if (BookCacheService.TryGetBooks(genre, out var cachedBooks))
             {
-                BookRecommendations[genre] = cachedBooks.Take(6).ToList();
+                BookRecommendations[genre] = (cachedBooks ?? new List<Book>()).Take(6).ToList();
             }
             else
             {
                 var books = await BookService.GetBooksBySubjectAsync(genre, limit: 6);
-                BookRecommendations[genre] = books;
-                BookCacheService.CacheBooks(genre, books);
+                BookRecommendations[genre] = books ?? new List<Book>();
+                BookCacheService.CacheBooks(genre, BookRecommendations[genre]);
             }
         }
 

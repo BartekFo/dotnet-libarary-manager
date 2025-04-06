@@ -46,49 +46,44 @@
             </div>
             <div class="col-md-8">
                 <h1 class="mb-3">@Book.Title</h1>
-                <h4 class="text-muted mb-4">by @Book.Author</h4>
+                <h4 class="text-muted mb-4">by @Book.Author.Name</h4>
+
 
                 <div class="book-details mb-4">
-                    @if (Book.FirstPublishYear.HasValue)
-                    {
-                        <p><strong>First Published:</strong> @Book.FirstPublishYear</p>
-                    }
-                    <p><strong>Editions:</strong> @Book.EditionCount</p>
-                    <p><strong>Full Text Available:</strong> @(Book.HasFulltext ? "Yes" : "No")</p>
-                    <p><strong>Public Scan:</strong> @(Book.PublicScan ? "Yes" : "No")</p>
+                    <h5>Reading Counts</h5>
+                    <p><strong>Want to read:</strong> @Book.ReadingCounts.Counts.Want_to_read</p>
+                    <p><strong>Currently reading</strong> @Book.ReadingCounts.Counts.Currently_reading</p>
+                    <p><strong>Already read</strong> @Book.ReadingCounts.Counts.Already_read</p>
                 </div>
 
-                @if (Book.InternetArchiveIds.Any())
-                {
-                    <div class="mb-4">
-                        <h5>Available in Internet Archive</h5>
-                        <div class="list-group">
-                            @foreach (var iaId in Book.InternetArchiveIds)
-                            {
-                                <a href="https://archive.org/details/@iaId" target="_blank"
-                                    class="list-group-item list-group-item-action">
-                                    @iaId
-                                </a>
-                            }
+                <div class="book-details mb-4">
+                    <h5>Ratings</h5>
+                    <p><strong>Average:</strong> @Book.Ratings.Summary.Average ⭐</p>
+                    <p><strong>Count:</strong> @Book.Ratings.Summary.Count</p>
+                    <div class="rating-bars">
+                        <div class="rating-bar">
+                            <span>⭐⭐⭐⭐⭐</span>
+                            <span>@Book.Ratings.Counts.Five</span>
+                        </div>
+                        <div class="rating-bar">
+                            <span>⭐⭐⭐⭐</span>
+                            <span>@Book.Ratings.Counts.Four</span>
+                        </div>
+                        <div class="rating-bar">
+                            <span>⭐⭐⭐</span>
+                            <span>@Book.Ratings.Counts.Three</span>
+                        </div>
+                        <div class="rating-bar">
+                            <span>⭐⭐</span>
+                            <span>@Book.Ratings.Counts.Two</span>
+                        </div>
+                        <div class="rating-bar">
+                            <span>⭐</span>
+                            <span>@Book.Ratings.Counts.One</span>
                         </div>
                     </div>
-                }
+                </div>
 
-                @if (Book.Subjects.Any())
-                {
-                    <div class="mb-4">
-                        <h5>Subjects</h5>
-                        <div class="d-flex flex-wrap gap-2">
-                            @foreach (var subject in Book.Subjects)
-                            {
-                                <a href="/books/genre/@HttpUtility.UrlEncode(subject)"
-                                    class="badge bg-primary text-decoration-none">
-                                    @subject
-                                </a>
-                            }
-                        </div>
-                    </div>
-                }
             </div>
         </div>
     }
@@ -113,6 +108,28 @@
     .badge {
         font-size: 0.9rem;
         padding: 0.5rem 1rem;
+    }
+
+    .rating-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 200px;
+    }
+
+    .rating-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .rating-bar span:first-child {
+        width: 120px;
+    }
+
+    .rating-bar span:last-child {
+        width: 40px;
+        text-align: right;
     }
 </style>
 

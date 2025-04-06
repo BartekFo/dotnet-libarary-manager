@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LibraryManager.Models.Entities;
@@ -27,7 +26,7 @@ namespace LibraryManager.Services
                     if (offset.HasValue) url += $"&offset={offset}";
                 }
 
-                var response = await _httpClient.GetFromJsonAsync<OpenLibraryResponse>(url);
+                var response = await _httpClient.GetFromJsonAsync<SearchResponse>(url);
                 if (response?.Works == null)
                     return new List<Book>();
 
@@ -39,9 +38,8 @@ namespace LibraryManager.Services
                     return new Book
                     {
                         Title = work.Title,
-                        Author = work.Authors?.FirstOrDefault()?.Name ?? "Unknown Author",
+                        Author = new Author { Name = work.Authors?.FirstOrDefault()?.Name ?? "Unknown Author" },
                         CoverUrl = coverUrl,
-                        Subjects = work.Subjects ?? Array.Empty<string>(),
                         Key = key
                     };
                 }).ToList();
@@ -60,15 +58,27 @@ namespace LibraryManager.Services
         {
             try
             {
-                var url = $"{_baseUrl}/works/{bookKey}.json";
-                var response = await _httpClient.GetFromJsonAsync<WorkDetailsResponse>(url);
+                var url = $"{_baseUrl}/works/{bookKey}";
+                var responseTask = _httpClient.GetFromJsonAsync<WorkDetailsResponse>($"{url}.json");
+                var readingCountsTask = _httpClient.GetFromJsonAsync<ReadingCounts>($"{url}/bookshelves.json");
+                Console.WriteLine($"{url}/bookshelves.json");
+                var ratingsTask = _httpClient.GetFromJsonAsync<Ratings>($"{url}/ratings.json");
 
-                if (response == null)
+                var allTasks = new List<Task> { responseTask, readingCountsTask, ratingsTask };
+                await Task.WhenAll(allTasks);
+
+                var response = await responseTask;
+                var readingCounts = await readingCountsTask;
+                var ratings = await ratingsTask;
+
+                if (response == null || readingCounts == null || ratings == null)
                     return null;
 
                 var coverUrl = response.Covers?.FirstOrDefault() > 0
                     ? $"https://covers.openlibrary.org/b/id/{response.Covers[0]}-M.jpg"
                     : string.Empty;
+
+                var author = await _httpClient.GetFromJsonAsync<Author>($"{_baseUrl}{response.Authors[0].Author.Key}.json");
 
                 string description = "No description available";
                 if (response.Description.ValueKind != JsonValueKind.Null)
@@ -87,11 +97,12 @@ namespace LibraryManager.Services
                 return new Book
                 {
                     Title = response.Title,
-                    Author = "Unknown Author", // We'll need to fetch author details separately
+                    Author = author ?? new Author { Name = "Unknown Author" },
                     CoverUrl = coverUrl,
                     Key = response.Key,
                     Description = description,
-                    Subjects = response.Subjects ?? Array.Empty<string>()
+                    ReadingCounts = readingCounts,
+                    Ratings = ratings
                 };
             }
             catch (Exception ex)
@@ -101,7 +112,7 @@ namespace LibraryManager.Services
             }
         }
 
-        private class OpenLibraryResponse
+        private class SearchResponse
         {
             public List<Work> Works { get; set; } = new();
         }
@@ -109,13 +120,13 @@ namespace LibraryManager.Services
         private class Work
         {
             public string Title { get; set; } = string.Empty;
-            public List<Author> Authors { get; set; } = new();
+            public List<WorkAuthor> Authors { get; set; } = new();
             public int? Cover_id { get; set; }
             public string[]? Subjects { get; set; }
             public string Key { get; set; } = string.Empty;
         }
 
-        private class Author
+        private class WorkAuthor
         {
             public string Name { get; set; } = string.Empty;
         }
@@ -128,7 +139,6 @@ namespace LibraryManager.Services
             [JsonPropertyName("description")]
             public JsonElement Description { get; set; }
             public List<int>? Covers { get; set; }
-            public string[]? Subjects { get; set; }
         }
 
         private class AuthorInfo

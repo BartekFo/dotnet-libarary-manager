@@ -71,4 +71,17 @@ public class UserBookService
             await _context.SaveChangesAsync();
         }
     }
+
+    public async Task DeleteUserBookAsync(int userBookId)
+    {
+        var userId = GetCurrentUserId();
+        var userBook = await _context.UserBooks
+            .FirstOrDefaultAsync(ub => ub.Id == userBookId && ub.UserId == userId);
+
+        if (userBook != null)
+        {
+            _context.UserBooks.Remove(userBook);
+            await _context.SaveChangesAsync();
+        }
+    }
 }

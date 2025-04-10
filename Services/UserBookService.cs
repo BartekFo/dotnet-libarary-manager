@@ -1,5 +1,6 @@
-using LibraryManager.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using LibraryManager.Models.Entities;
+using LibraryManager.Data;
 
 namespace LibraryManager.Services;
 

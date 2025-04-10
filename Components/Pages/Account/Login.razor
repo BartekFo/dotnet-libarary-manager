@@ -3,10 +3,13 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Web
 @using LibraryManager.Models.ViewModels
+@using LibraryManager.Data
 @attribute [AllowAnonymous]
-@inject SignInManager<IdentityUser> SignInManager
+@inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager NavigationManager
 @inherits RedirectIfAuthenticated
+
+<PageTitle>Login</PageTitle>
 
 <div class="login-container">
     <div class="login-card">

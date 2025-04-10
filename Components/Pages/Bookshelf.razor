@@ -3,6 +3,7 @@
 @using LibraryManager.Models.Entities
 @using LibraryManager.Services
 @attribute [Authorize]
+@attribute [StreamRendering]
 @inject UserBookService UserBookService
 @inject NavigationManager NavigationManager
 @inject ILogger<Bookshelf> Logger

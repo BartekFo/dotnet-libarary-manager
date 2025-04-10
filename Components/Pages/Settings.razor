@@ -1,0 +1,211 @@
+﻿@page "/settings"
+@using Microsoft.AspNetCore.Identity
+@using LibraryManager.Models.ViewModels
+@using LibraryManager.Data
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@rendermode InteractiveServer
+
+
+<PageTitle>Settings</PageTitle>
+
+<div class="settings-container">
+    <div class="settings-card">
+        <h2>User Settings</h2>
+
+        <div class="settings-section">
+            <h3>Profile Settings</h3>
+            <EditForm Model="@profileModel" OnValidSubmit="UpdateProfile" FormName="profileForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="form-group">
+                    <label for="firstName">First Name:</label>
+                    <InputText id="firstName" @bind-Value="profileModel.FirstName" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="lastName">Last Name:</label>
+                    <InputText id="lastName" @bind-Value="profileModel.LastName" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="age">Age:</label>
+                    <InputNumber id="age" @bind-Value="profileModel.Age" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="favoriteGenre">Favorite Genre:</label>
+                    <InputText id="favoriteGenre" @bind-Value="profileModel.FavoriteGenre" class="form-control" />
+                </div>
+
+                <button type="submit" class="save-button">Save Profile</button>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+<style>
+    .settings-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 90vh;
+        background-image: url('/images/hero.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        position: relative;
+    }
+
+    .settings-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 1;
+    }
+
+    .settings-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 500px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .settings-card h2 {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        color: #333;
+    }
+
+    .settings-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .settings-section h3 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    .danger-zone {
+        border-color: #dc3545;
+        background-color: #fff8f8;
+    }
+
+    .danger-content {
+        text-align: center;
+    }
+
+    .danger-content p {
+        color: #666;
+        margin-bottom: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #555;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .save-button {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .save-button:hover {
+        background-color: #0056b3;
+    }
+
+    .delete-button {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .delete-button:hover {
+        background-color: #c82333;
+    }
+</style>
+
+@code {
+    private UserProfileViewModel profileModel = new();
+    private ApplicationUser? currentUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authState.User);
+        if (user != null)
+        {
+            currentUser = user;
+            profileModel = new UserProfileViewModel
+            {
+                FirstName = user.FirstName ?? string.Empty,
+                LastName = user.LastName ?? string.Empty,
+                Age = user.Age ?? 0,
+                FavoriteGenre = user.FavoriteGenre ?? string.Empty
+            };
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/", forceLoad: true);
+        }
+    }
+
+    private async Task UpdateProfile()
+    {
+        if (currentUser == null) return;
+
+        currentUser.FirstName = profileModel.FirstName ?? string.Empty;
+        currentUser.LastName = profileModel.LastName ?? string.Empty;
+        currentUser.Age = profileModel.Age ?? 0;
+        currentUser.FavoriteGenre = profileModel.FavoriteGenre ?? string.Empty;
+
+        var result = await UserManager.UpdateAsync(currentUser);
+        if (result.Succeeded)
+        {
+            NavigationManager.NavigateTo("/home");
+        }
+    }
+}

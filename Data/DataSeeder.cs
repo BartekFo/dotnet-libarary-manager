@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using LibraryManager.Data;
 
 namespace LibraryManager.Data
 {
@@ -9,7 +10,7 @@ namespace LibraryManager.Data
         {
             using var scope = serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
             // Ensure database is created
@@ -25,29 +26,24 @@ namespace LibraryManager.Data
                 }
             }
 
-            // Create test users if they don't exist
-            var testUsers = new[]
+            // Create admin user if it doesn't exist
+            var adminEmail = "admin@library.com";
+            var adminUser = await userManager.FindByEmailAsync(adminEmail);
+            if (adminUser == null)
             {
-                new { Email = "admin@library.com", Password = "Admin123!", Role = "Admin" },
-                new { Email = "user@library.com", Password = "User123!", Role = "User" }
-            };
-
-            foreach (var testUser in testUsers)
-            {
-                if (await userManager.FindByEmailAsync(testUser.Email) == null)
+                adminUser = new ApplicationUser
                 {
-                    var user = new IdentityUser
-                    {
-                        UserName = testUser.Email,
-                        Email = testUser.Email,
-                        EmailConfirmed = true
-                    };
+                    UserName = adminEmail,
+                    Email = adminEmail,
+                    FirstName = "Admin",
+                    LastName = "User",
+                    EmailConfirmed = true
+                };
 
-                    var result = await userManager.CreateAsync(user, testUser.Password);
-                    if (result.Succeeded)
-                    {
-                        await userManager.AddToRoleAsync(user, testUser.Role);
-                    }
+                var result = await userManager.CreateAsync(adminUser, "Admin123!");
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(adminUser, "Admin");
                 }
             }
         }

@@ -5,6 +5,7 @@
 @using LibraryManager.Services
 @using System.Web
 @attribute [Authorize]
+@attribute [StreamRendering]
 @inject BookService BookService
 @inject BookCacheService BookCacheService
 @inject NavigationManager NavigationManager

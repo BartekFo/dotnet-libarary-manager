@@ -1,7 +1,8 @@
 @page "/Account/Logout"
 @attribute [AllowAnonymous]
 @using Microsoft.AspNetCore.Components.Authorization
-@inject SignInManager<IdentityUser> SignInManager
+@using LibraryManager.Data
+@inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
